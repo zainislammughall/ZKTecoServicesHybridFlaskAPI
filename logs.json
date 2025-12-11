@@ -1,0 +1,76 @@
+[
+    {
+        "employee_code": "1001",
+        "in_out_mode": 0,
+        "timestamp": "2025-02-24T08:55:10",
+        "device_ip": "192.168.1.201"
+    },
+    {
+        "employee_code": "1001",
+        "in_out_mode": 1,
+        "timestamp": "2025-02-24T17:02:41",
+        "device_ip": "192.168.1.201"
+    },
+    {
+        "employee_code": "1002",
+        "in_out_mode": 0,
+        "timestamp": "2025-02-24T09:07:12",
+        "device_ip": "192.168.1.201"
+    },
+    {
+        "employee_code": "1002",
+        "in_out_mode": 1,
+        "timestamp": "2025-02-24T17:10:30",
+        "device_ip": "192.168.1.201"
+    },
+    {
+        "employee_code": "1003",
+        "in_out_mode": 0,
+        "timestamp": "2025-02-25T08:59:58",
+        "device_ip": "192.168.1.202"
+    },
+    {
+        "employee_code": "1003",
+        "in_out_mode": 1,
+        "timestamp": "2025-02-25T16:50:44",
+        "device_ip": "192.168.1.202"
+    },
+    {
+        "employee_code": "1004",
+        "in_out_mode": 0,
+        "timestamp": "2025-02-25T09:18:20",
+        "device_ip": "192.168.1.202"
+    },
+    {
+        "employee_code": "1004",
+        "in_out_mode": 1,
+        "timestamp": "2025-02-25T17:21:17",
+        "device_ip": "192.168.1.202"
+    },
+    {
+        "employee_code": "1001",
+        "in_out_mode": 0,
+        "timestamp": "2025-02-26T08:50:05",
+        "device_ip": "192.168.1.201"
+    },
+    {
+        "employee_code": "1001",
+        "in_out_mode": 1,
+        "timestamp": "2025-02-26T17:03:10",
+        "device_ip": "192.168.1.201"
+    },
+    {
+        "employee_code": "1001",
+        "in_out_mode": 0,
+        "timestamp": "2025-02-26T09:05:10",
+        "device_sn": "ZKKK123456",
+        "device_ip": "192.168.1.201"
+    },
+    {
+        "employee_code": "123301",
+        "in_out_mode": 0,
+        "timestamp": "2025-02-26T09:05:10",
+        "device_sn": "ZKKK123456",
+        "device_ip": "192.168.1.201"
+    }
+]
