@@ -11,9 +11,10 @@ using the `zk` Python library (hybrid mode). Logs are saved into `logs.json`.
 4. python app.py
 
 ## Endpoints
-- POST /push/attendance  — receive pushed logs from devices
-- GET  /pull?ip=...      — manually poll a device
-- GET  /logs             — read saved logs (filter with employee, from, to)
+- POST /push/attendance          — receive pushed logs from devices
+- GET  /pull?ip=<device_Ip>       — manually poll a device
+- GET  /logs                    — read all saved logs 
+- GET  /logs/filter?ip=<device_Ip>&from=<yyyy-mm-dd>&to=<yyyy-mm-dd>     — read saved logs (filter with ip, from, to)
 
 ## Configure Devices
 1. http://<server-ip>:5000/push/attendance
