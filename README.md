@@ -6,9 +6,10 @@ using the `zk` Python library (hybrid mode). Logs are saved into `logs.json`.
 
 ## Quick start
 1. Create and activate a Python venv
-2. pip install -r requirements.txt
-3. Edit config.json (set devices and enable_polling)
-4. python app.py
+2. pip install pyzk
+3. pip install -r requirements.txt
+4. Edit config.json (set devices and enable_polling)
+5. python app.py
 
 ## Endpoints
 - POST /push/attendance          — receive pushed logs from devices
