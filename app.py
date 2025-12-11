@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import json, os
 from datetime import datetime
+from Scan_network import SCAN_PORT, load_config, save_config, scan_network
 from zkteco_push_handler import handle_push
 from log_store import load_logs, save_logs
 from background_sync import BackgroundPoller
@@ -118,6 +119,53 @@ def home():
         'push_endpoint': '/push/attendance',
         'pull_endpoint': '/pull?ip=IP'
     }
+
+@app.route("/scan-devices", methods=["GET"])
+def scan_devices():
+    config = load_config()
+
+    # Get existing devices list
+    existing_devices = config.get("devices", [])
+
+    # Convert current device list to a set for quick duplicate check
+    existing_ips = {dev["ip"] for dev in existing_devices}
+
+    # Scan LAN for new ZK devices
+    scanned_ips = scan_network("192.168.1.")
+
+    # Add only new devices (avoid duplicates)
+    new_device_entries = []
+    for ip in scanned_ips:
+        if ip not in existing_ips:
+            new_device_entries.append({
+                "ip": ip,
+                "port": SCAN_PORT
+            })
+
+    # Merge new entries into config
+    config["devices"].extend(new_device_entries)
+
+    # Save updated config.json
+    save_config(config)
+
+    return jsonify({
+        "status": "success",
+        "found_devices": scanned_ips,
+        "new_devices_added": new_device_entries,
+        "all_devices": config["devices"]
+    })
+
+
+@app.route("/devices", methods=["GET"])
+def get_devices():
+    config = load_config()
+    return jsonify({
+        "devices": config.get("devices", [])
+    })
+
+
+
+
 
 
 
