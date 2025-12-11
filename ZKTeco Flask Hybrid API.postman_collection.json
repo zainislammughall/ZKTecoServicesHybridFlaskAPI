@@ -1,0 +1,175 @@
+{
+	"info": {
+		"_postman_id": "3d3ba700-4802-480b-9694-95e5a3283524",
+		"name": "ZKTeco Flask Hybrid API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40259937",
+		"_collection_link": "https://api-testing-7504.postman.co/workspace/5dc1249c-4a8c-4ffd-b928-10846984c8b8/collection/40259937-3d3ba700-4802-480b-9694-95e5a3283524?action=share&source=collection_link&creator=40259937"
+	},
+	"item": [
+		{
+			"name": "API Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Scan Devices",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/scan-devices",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"scan-devices"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Devices",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/devices",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"devices"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Push Attendance Log (Dummy Test)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"sn\": \"ZK123456\",\n  \"id\": \"1001\",\n  \"timestamp\": \"2025-02-26T09:05:10\",\n  \"type\": 0,\n  \"device_ip\": \"192.168.1.201\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5000/push/attendance",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"push",
+						"attendance"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Pull Logs From Device (Manual Poll)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/pull?ip=192.168.1.201",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"pull"
+					],
+					"query": [
+						{
+							"key": "ip",
+							"value": "192.168.1.201"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Logs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/logs",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"logs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Filter Logs (IP + From/To Date ONLY)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/logs/filter?ip=192.168.1.201&from=2025-02-24&to=2025-02-26",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"logs",
+						"filter"
+					],
+					"query": [
+						{
+							"key": "ip",
+							"value": "192.168.1.201"
+						},
+						{
+							"key": "from",
+							"value": "2025-02-24"
+						},
+						{
+							"key": "to",
+							"value": "2025-02-26"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
