@@ -1,27 +1,27 @@
 from flask import Flask, request, jsonify
 import json, os
 from datetime import datetime
+
 from Scan_network import SCAN_PORT, load_config, save_config, scan_network
 from zkteco_push_handler import handle_push
 from log_store import load_logs, save_logs
 from background_sync import BackgroundPoller
 
 CONFIG = {}
-if os.path.exists('config.json'):
-    with open('config.json') as f:
+if os.path.exists("config.json"):
+    with open("config.json") as f:
         CONFIG = json.load(f)
 
 app = Flask(__name__)
 
 poller = None
-if CONFIG.get('enable_polling', False):
+if CONFIG.get("enable_polling", False):
     try:
         poller = BackgroundPoller(CONFIG)
         poller.start()
-        print('[app] background poller started')
+        print("[app] background poller started")
     except Exception as ex:
-        print('[app] failed to start poller:', ex)
-
+        print("[app] failed to start poller:", ex)
 
 def sync_devices_before_read(timeout=None):
     from zkteco_poller import poll_device
@@ -50,36 +50,45 @@ def sync_devices_before_read(timeout=None):
     }
 
 
-
-@app.route('/push/attendance', methods=['POST'])
+# ---------------- PUSH ----------------
+@app.route("/push/attendance", methods=["POST"])
 def push_attendance():
     try:
         data = request.get_json(force=True)
     except Exception as e:
         return str(e), 400
+
     ok, msg = handle_push(data)
-    if ok:
-        return msg, 200
-    return msg, 400
+    return (msg, 200) if ok else (msg, 400)
 
 
-@app.route('/pull', methods=['GET'])
+# ---------------- PULL ----------------
+@app.route("/pull", methods=["GET"])
 def pull_now():
-    ip = request.args.get('ip')
-    port = int(request.args.get('port', 4370))
-    timeout = int(request.args.get('timeout', CONFIG.get('poll_timeout_seconds', 5)))
+    ip = request.args.get("ip")
+    port = int(request.args.get("port", 4370))
+    timeout = int(request.args.get("timeout", CONFIG.get("poll_timeout_seconds", 5)))
+
+    if not ip:
+        return {"error": "ip is required"}, 400
+
     from zkteco_poller import poll_device
+
     try:
         logs = poll_device(ip, port=port, timeout=timeout)
     except Exception as e:
-        return { 'error': str(e) }, 500
+        return {"error": str(e)}, 500
+
     saved = save_logs(logs)
-    return { 'pulled': len(logs), 'saved_new': len(saved) }
+    return {
+        "pulled": len(logs),
+        "saved_new": len(saved)
+    }
 
 
+# ---------------- LOGS ----------------
 @app.route("/logs", methods=["GET"])
 def get_logs():
-    
     sync_devices_before_read()
 
     data = load_logs()
@@ -111,9 +120,9 @@ def get_logs():
     })
 
 
-
 @app.route("/logs/filter", methods=["GET"])
 def filter_logs():
+    # 🔥 fetch new logs before returning
     sync_devices_before_read()
 
     data = load_logs()
@@ -146,65 +155,85 @@ def filter_logs():
 
 
 
-@app.route('/', methods=['GET'])
-def home():
-    return {
-        'status': 'running',
-        'push_endpoint': '/push/attendance',
-        'pull_endpoint': '/pull?ip=IP'
-    }
-
+# ---------------- DEVICE SCAN ----------------
 @app.route("/scan-devices", methods=["GET"])
 def scan_devices():
     config = load_config()
+    devices = config.get("devices", [])
+    existing_ips = {d["ip"] for d in devices}
 
-    # Get existing devices list
-    existing_devices = config.get("devices", [])
-
-    # Convert current device list to a set for quick duplicate check
-    existing_ips = {dev["ip"] for dev in existing_devices}
-
-    # Scan LAN for new ZK devices
     scanned_ips = scan_network("192.168.1.")
 
-    # Add only new devices (avoid duplicates)
-    new_device_entries = []
+    new_devices = []
     for ip in scanned_ips:
         if ip not in existing_ips:
-            new_device_entries.append({
+            new_devices.append({
                 "ip": ip,
                 "port": SCAN_PORT
             })
 
-    # Merge new entries into config
-    config["devices"].extend(new_device_entries)
-
-    # Save updated config.json
+    config["devices"].extend(new_devices)
     save_config(config)
 
     return jsonify({
-        "status": "success",
-        "found_devices": scanned_ips,
-        "new_devices_added": new_device_entries,
+        "found": scanned_ips,
+        "added": new_devices,
         "all_devices": config["devices"]
     })
+
+
+# ---------------- ADD DEVICE MANUALLY (NEW) ----------------
+@app.route("/devices/add", methods=["POST"])
+def add_device():
+    data = request.get_json(force=True)
+
+    ip = data.get("ip")
+    port = int(data.get("port", 4370))
+
+    if not ip:
+        return {"error": "ip is required"}, 400
+
+    config = load_config()
+    devices = config.get("devices", [])
+
+    for d in devices:
+        if d.get("ip") == ip:
+            return {
+                "status": "exists",
+                "message": "device already exists"
+            }, 200
+
+    device = {
+        "ip": ip,
+        "port": port
+    }
+
+    devices.append(device)
+    config["devices"] = devices
+    save_config(config)
+
+    return {
+        "status": "success",
+        "message": "device added",
+        "device": device
+    }
 
 
 @app.route("/devices", methods=["GET"])
 def get_devices():
     config = load_config()
-    return jsonify({
-        "devices": config.get("devices", [])
-    })
+    return jsonify(config.get("devices", []))
 
 
+@app.route("/", methods=["GET"])
+def home():
+    return {
+        "status": "running",
+        "push": "/push/attendance",
+        "pull": "/pull?ip=IP",
+        "add_device": "/devices/add"
+    }
 
 
-
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-
-
-
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
