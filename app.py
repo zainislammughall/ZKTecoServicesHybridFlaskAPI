@@ -23,6 +23,34 @@ if CONFIG.get('enable_polling', False):
         print('[app] failed to start poller:', ex)
 
 
+def sync_devices_before_read(timeout=None):
+    from zkteco_poller import poll_device
+
+    config = load_config()
+    devices = config.get("devices", [])
+    total_pulled = 0
+    total_saved = 0
+
+    for dev in devices:
+        ip = dev.get("ip")
+        port = dev.get("port", 4370)
+
+        try:
+            logs = poll_device(ip, port=port, timeout=timeout or 5)
+            saved = save_logs(logs)
+            total_pulled += len(logs)
+            total_saved += len(saved)
+        except Exception as ex:
+            print(f"[sync] device {ip} skipped:", ex)
+
+    return {
+        "devices": len(devices),
+        "pulled": total_pulled,
+        "saved": total_saved
+    }
+
+
+
 @app.route('/push/attendance', methods=['POST'])
 def push_attendance():
     try:
@@ -49,67 +77,73 @@ def pull_now():
     return { 'pulled': len(logs), 'saved_new': len(saved) }
 
 
-@app.route('/logs', methods=['GET'])
+@app.route("/logs", methods=["GET"])
 def get_logs():
+    
+    sync_devices_before_read()
+
     data = load_logs()
-    emp = request.args.get('employee')
-    frm = request.args.get('from')
-    to = request.args.get('to')
+
+    emp = request.args.get("employee")
+    frm = request.args.get("from")
+    to = request.args.get("to")
+
     if emp:
-        data = [d for d in data if d.get('employee_code') == emp]
+        data = [d for d in data if d.get("employee_code") == emp]
+
     if frm:
         try:
             fdt = datetime.fromisoformat(frm)
-            data = [d for d in data if datetime.fromisoformat(d.get('timestamp')) >= fdt]
+            data = [d for d in data if datetime.fromisoformat(d["timestamp"]) >= fdt]
         except:
             pass
+
     if to:
         try:
             tdt = datetime.fromisoformat(to)
-            data = [d for d in data if datetime.fromisoformat(d.get('timestamp')) <= tdt]
+            data = [d for d in data if datetime.fromisoformat(d["timestamp"]) <= tdt]
         except:
             pass
-    return jsonify(data)
-
-
-@app.route('/logs/filter', methods=['GET'])
-def filter_logs():
-    from log_store import load_logs
-    data = load_logs()
-
-    ip = request.args.get('ip')
-    frm = request.args.get('from')   # example: 2025-01-01
-    to = request.args.get('to')      # example: 2025-01-05
-
-    # Filter by device IP
-    if ip:
-        data = [d for d in data if d.get('device_ip') == ip]
-
-    # FROM-DATE (no time required)
-    if frm:
-        try:
-            fdt = datetime.strptime(frm, "%Y-%m-%d")
-            fdt = fdt.replace(hour=0, minute=0, second=0)
-            data = [d for d in data if datetime.fromisoformat(d.get('timestamp')) >= fdt]
-        except:
-            return {"error": "Invalid 'from' date. Format must be YYYY-MM-DD"}, 400
-
-    # TO-DATE (no time required)
-    if to:
-        try:
-            tdt = datetime.strptime(to, "%Y-%m-%d")
-            tdt = tdt.replace(hour=23, minute=59, second=59)
-            data = [d for d in data if datetime.fromisoformat(d.get('timestamp')) <= tdt]
-        except:
-            return {"error": "Invalid 'to' date. Format must be YYYY-MM-DD"}, 400
 
     return jsonify({
-        "ip": ip,
-        "from": frm,
-        "to": to,
         "count": len(data),
         "logs": data
     })
+
+
+
+@app.route("/logs/filter", methods=["GET"])
+def filter_logs():
+    sync_devices_before_read()
+
+    data = load_logs()
+
+    ip = request.args.get("ip")
+    frm = request.args.get("from")
+    to = request.args.get("to")
+
+    if ip:
+        data = [d for d in data if d.get("device_ip") == ip]
+
+    if frm:
+        try:
+            fdt = datetime.strptime(frm, "%Y-%m-%d").replace(hour=0, minute=0, second=0)
+            data = [d for d in data if datetime.fromisoformat(d["timestamp"]) >= fdt]
+        except:
+            return {"error": "Invalid from date"}, 400
+
+    if to:
+        try:
+            tdt = datetime.strptime(to, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+            data = [d for d in data if datetime.fromisoformat(d["timestamp"]) <= tdt]
+        except:
+            return {"error": "Invalid to date"}, 400
+
+    return jsonify({
+        "count": len(data),
+        "logs": data
+    })
+
 
 
 @app.route('/', methods=['GET'])
